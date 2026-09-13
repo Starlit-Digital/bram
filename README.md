@@ -13,6 +13,7 @@ name; bridging is only the job it performs.
 - Loads peer adapters from `~/.config/bram/config.json`.
 - Sends prompts to a configured peer command over stdin.
 - Returns structured JSON with stdout, stderr, exit code, duration, and errors.
+- Installs a first Grok mailbox peer as `grok`.
 - Provides a small CLI for health checks, peer listing, direct asks, and launchd
   installation.
 - Installs locally under `$HOME/.local`, matching the SDF tool convention.
@@ -57,6 +58,31 @@ Every peer command receives the prompt on stdin. This keeps Bram provider-neutra
 Grok, Claude, local Ollama wrappers, shell scripts, and future AI tools all fit
 behind the same contract.
 
+## Grok Mailbox Peer
+
+Until Grok Bot exposes a supported stdin/stdout chat CLI, Bram installs a local
+`grok` mailbox peer. It reads a prompt from stdin, writes a request file, waits
+for Grok Bot to write the matching response file, and prints that response.
+
+Default mailbox paths:
+
+```text
+/private/ai-notes/bram/inbox/<id>.req.json
+/private/ai-notes/bram/outbox/<id>.res
+```
+
+Useful settings:
+
+```sh
+export BRAM_GROK_MAILBOX=/private/ai-notes/bram
+export BRAM_GROK_TIMEOUT_SECONDS=120
+export BRAM_GROK_POLL_SECONDS=0.2
+```
+
+Grok Bot should watch `inbox`, read each JSON request, and write plain text to
+the `response_path` named in the request. The wrapper supports both `grok` and
+`grok chat` so the sample config works as-is.
+
 ## HTTP API
 
 ```sh
@@ -81,6 +107,7 @@ The launch agent runs `bram daemon` and writes logs under
 
 ```sh
 make build                       # compile and install ~/.local/bin/bram
+                                 # and ~/.local/bin/grok
 make compile                     # compile only to .build/bram
 make build PREFIX="$HOME/.local" # explicit installation prefix
 ```
@@ -93,5 +120,5 @@ out of the checkout, so moving the source repo does not break it.
 ```sh
 go test ./...
 python3 scripts/test-local-install.py
+python3 scripts/test-grok-mailbox.py
 ```
-

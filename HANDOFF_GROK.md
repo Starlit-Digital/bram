@@ -18,12 +18,15 @@ The design goal is a small, inspectable local service:
 - A peer is any command that can receive a prompt on stdin and return text on
   stdout. Grok should be just one peer, not a special-case assumption.
 - macOS launchd support should let the daemon run in the background.
+- The first working Grok adapter is a mailbox command installed as
+  `$HOME/.local/bin/grok`.
 
 ## Local tool conventions
 
 Follow the SDF local tool pattern:
 
 - `make build` and `make install` compile and install to `$HOME/.local/bin/bram`.
+- The same install also writes `$HOME/.local/bin/grok`, a mailbox peer wrapper.
 - `make compile` only writes `.build/bram`.
 - Install receipts live in `$HOME/.local/share/bram/install-info.txt`.
 - Install history lives under `$HOME/.local/share/bram/installs/`.
@@ -46,6 +49,8 @@ Relevant local policy:
 - `internal/launchd` writes and loads the macOS LaunchAgent.
 - `scripts/build-local.sh` is the local installer.
 - `scripts/test-local-install.py` verifies install behavior.
+- `scripts/peers/grok-mailbox.sh` is the stdin/stdout Grok peer.
+- `scripts/peers/grok-mailbox-mock-responder.py` is a local test responder.
 
 ## API
 
@@ -69,14 +74,41 @@ curl -s http://127.0.0.1:7878/v1/ask \
   -d '{"peer":"echo","prompt":"hello"}'
 ```
 
+## Grok mailbox protocol
+
+The installed `grok` command reads a prompt from stdin, creates:
+
+```text
+/private/ai-notes/bram/inbox/<id>.req.json
+```
+
+and waits for:
+
+```text
+/private/ai-notes/bram/outbox/<id>.res
+```
+
+The request JSON includes `id`, `prompt`, `request_path`, and `response_path`.
+Grok Bot should watch the inbox and write plain text to the exact
+`response_path`. Bram will print that text as the peer answer.
+
+Environment knobs:
+
+```sh
+BRAM_GROK_MAILBOX=/private/ai-notes/bram
+BRAM_GROK_TIMEOUT_SECONDS=120
+BRAM_GROK_POLL_SECONDS=0.2
+```
+
 ## Suggested next work
 
 1. Add a real Grok adapter example once the local Grok CLI invocation is known.
-2. Decide whether Bram should support streaming responses, probably via SSE.
-3. Add request logging with redaction controls.
-4. Add an auth token option before exposing anything beyond localhost.
-5. Add tests for config validation, peer execution, and HTTP handlers.
-6. Consider a Unix socket transport for local tools that should avoid TCP.
+2. Run a Grok Bot watcher that consumes mailbox requests almost immediately.
+3. Decide whether Bram should support streaming responses, probably via SSE.
+4. Add request logging with redaction controls.
+5. Add an auth token option before exposing anything beyond localhost.
+6. Add tests for HTTP handlers.
+7. Consider a Unix socket transport for local tools that should avoid TCP.
 
 ## Verification commands
 
@@ -85,8 +117,10 @@ Run from `/Users/cs/bram`:
 ```sh
 go test ./...
 python3 scripts/test-local-install.py
+python3 scripts/test-grok-mailbox.py
 make build
 ~/.local/bin/bram version
+~/.local/bin/grok --help
 ```
 
 For a smoke test:
@@ -95,4 +129,3 @@ For a smoke test:
 bram daemon
 bram ask --peer echo "hello from Grok"
 ```
-

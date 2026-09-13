@@ -23,6 +23,7 @@ run: compile
 .PHONY: test
 test:
 	$(GO) test ./...
+	python3 scripts/test-grok-mailbox.py
 
 .PHONY: vet
 vet:
@@ -51,4 +52,3 @@ help:
 	@echo "  fmt           Run go fmt"
 	@echo "  clean         Remove build artifacts"
 	@echo "  install       Build and install using PREFIX (default ~/.local)"
-

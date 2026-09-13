@@ -19,14 +19,23 @@ def main():
         env["PREFIX"] = tmp
         run(["make", "build"], env=env)
         exe = pathlib.Path(tmp) / "bin" / "bram"
+        grok = pathlib.Path(tmp) / "bin" / "grok"
         if not exe.exists():
             raise SystemExit("installed bram missing")
+        if not grok.exists():
+            raise SystemExit("installed grok peer missing")
         version = subprocess.run([str(exe), "version"], check=True, text=True, capture_output=True).stdout.strip()
         if not version:
             raise SystemExit("version output missing")
         receipt = pathlib.Path(tmp) / "share" / "bram" / "install-info.txt"
-        if "binary_sha256:" not in receipt.read_text():
+        receipt_text = receipt.read_text()
+        if "binary_sha256:" not in receipt_text:
             raise SystemExit("install receipt missing binary hash")
+        if "grok_peer_sha256:" not in receipt_text:
+            raise SystemExit("install receipt missing grok peer hash")
+        peer_copy = pathlib.Path(tmp) / "share" / "bram" / "peers" / "grok-mailbox.sh"
+        if not peer_copy.exists():
+            raise SystemExit("share peer copy missing")
 
         shutil.rmtree(ROOT / ".build", ignore_errors=True)
         run(["make", "compile"], env=env)
@@ -38,4 +47,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
