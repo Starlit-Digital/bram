@@ -63,11 +63,14 @@ func Load(path string) (Config, error) {
 }
 
 func Path() (string, error) {
-	dir, err := os.UserConfigDir()
+	if dir := os.Getenv("XDG_CONFIG_HOME"); dir != "" {
+		return filepath.Join(dir, "bram", "config.json"), nil
+	}
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "bram", "config.json"), nil
+	return filepath.Join(home, ".config", "bram", "config.json"), nil
 }
 
 func (c Config) Validate() error {
