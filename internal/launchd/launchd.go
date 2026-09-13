@@ -52,6 +52,19 @@ func Plist() (string, error) {
 	}
 	bramPath := filepath.Join(home, ".local", "bin", "bram")
 	logDir := filepath.Join(home, ".local", "share", "bram", "logs")
+	pathEnv := strings.Join([]string{
+		filepath.Join(home, ".local", "bin"),
+		"/opt/homebrew/bin",
+		"/opt/homebrew/sbin",
+		"/usr/local/bin",
+		"/usr/local/go/bin",
+		filepath.Join(home, "go", "bin"),
+		"/usr/bin",
+		"/bin",
+		"/usr/sbin",
+		"/sbin",
+		"/opt/homebrew/opt/llvm/bin",
+	}, ":")
 	if err := os.MkdirAll(logDir, 0o755); err != nil {
 		return "", err
 	}
@@ -67,6 +80,17 @@ func Plist() (string, error) {
     <string>%s</string>
     <string>daemon</string>
   </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>%s</string>
+    <key>BRAM_GROK_MAILBOX</key>
+    <string>/private/ai-notes/bram</string>
+    <key>BRAM_GROK_POLL_SECONDS</key>
+    <string>0.1</string>
+    <key>BRAM_GROK_TIMEOUT_SECONDS</key>
+    <string>120</string>
+  </dict>
   <key>RunAtLoad</key>
   <true/>
   <key>KeepAlive</key>
@@ -77,7 +101,7 @@ func Plist() (string, error) {
   <string>%s</string>
 </dict>
 </plist>
-`, label, xmlEscape(bramPath), xmlEscape(filepath.Join(logDir, "bram.out.log")), xmlEscape(filepath.Join(logDir, "bram.err.log")))
+`, label, xmlEscape(bramPath), xmlEscape(pathEnv), xmlEscape(filepath.Join(logDir, "bram.out.log")), xmlEscape(filepath.Join(logDir, "bram.err.log")))
 	return buf.String(), nil
 }
 
