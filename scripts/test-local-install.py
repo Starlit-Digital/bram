@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+import os
+import pathlib
+import shutil
+import subprocess
+import tempfile
+
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+
+
+def run(args, **kwargs):
+    return subprocess.run(args, cwd=ROOT, check=True, text=True, capture_output=True, **kwargs)
+
+
+def main():
+    with tempfile.TemporaryDirectory() as tmp:
+        env = os.environ.copy()
+        env["PREFIX"] = tmp
+        run(["make", "build"], env=env)
+        exe = pathlib.Path(tmp) / "bin" / "bram"
+        if not exe.exists():
+            raise SystemExit("installed bram missing")
+        version = subprocess.run([str(exe), "version"], check=True, text=True, capture_output=True).stdout.strip()
+        if not version:
+            raise SystemExit("version output missing")
+        receipt = pathlib.Path(tmp) / "share" / "bram" / "install-info.txt"
+        if "binary_sha256:" not in receipt.read_text():
+            raise SystemExit("install receipt missing binary hash")
+
+        shutil.rmtree(ROOT / ".build", ignore_errors=True)
+        run(["make", "compile"], env=env)
+        if not (ROOT / ".build" / "bram").exists():
+            raise SystemExit("compile-only build missing")
+
+    print("local install checks passed")
+
+
+if __name__ == "__main__":
+    main()
+
