@@ -9,7 +9,7 @@ Reads a prompt from stdin, writes a request file for Grok Bot to answer, waits
 for the matching response file, then prints that response to stdout.
 
 Environment:
-  BRAM_GROK_MAILBOX          Mailbox root (default: /private/ai-notes/bram)
+  BRAM_GROK_MAILBOX          Mailbox root (default: $HOME/.local/share/bram/mailbox)
   BRAM_GROK_TIMEOUT_SECONDS Timeout in seconds (default: 120)
   BRAM_GROK_POLL_SECONDS    Poll interval in seconds (default: 0.2)
 
@@ -31,7 +31,7 @@ if [[ "${1:-}" == "chat" ]]; then
   shift
 fi
 
-mailbox="${BRAM_GROK_MAILBOX:-/private/ai-notes/bram}"
+mailbox="${BRAM_GROK_MAILBOX:-$HOME/.local/share/bram/mailbox}"
 timeout_seconds="${BRAM_GROK_TIMEOUT_SECONDS:-120}"
 poll_seconds="${BRAM_GROK_POLL_SECONDS:-0.2}"
 inbox="$mailbox/inbox"

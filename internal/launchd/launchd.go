@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// Retained for upgrade compatibility; product ownership is Starlit Digital.
 const label = "ca.simmonsdigitalfoundry.bram"
 
 func Install() (string, error) {
@@ -85,7 +86,7 @@ func Plist() (string, error) {
     <key>PATH</key>
     <string>%s</string>
     <key>BRAM_GROK_MAILBOX</key>
-    <string>/private/ai-notes/bram</string>
+    <string>%s</string>
     <key>BRAM_GROK_POLL_SECONDS</key>
     <string>0.1</string>
     <key>BRAM_GROK_TIMEOUT_SECONDS</key>
@@ -101,7 +102,7 @@ func Plist() (string, error) {
   <string>%s</string>
 </dict>
 </plist>
-`, label, xmlEscape(bramPath), xmlEscape(pathEnv), xmlEscape(filepath.Join(logDir, "bram.out.log")), xmlEscape(filepath.Join(logDir, "bram.err.log")))
+`, label, xmlEscape(bramPath), xmlEscape(pathEnv), xmlEscape(mailboxPath(home)), xmlEscape(filepath.Join(logDir, "bram.out.log")), xmlEscape(filepath.Join(logDir, "bram.err.log")))
 	return buf.String(), nil
 }
 
@@ -116,4 +117,16 @@ func plistPath() (string, error) {
 func xmlEscape(s string) string {
 	replacer := strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;", `"`, "&quot;", "'", "&apos;")
 	return replacer.Replace(s)
+}
+
+// Existing private-path mailboxes remain usable on upgraded installations.
+func mailboxPath(home string) string {
+	if value := os.Getenv("BRAM_GROK_MAILBOX"); value != "" {
+		return value
+	}
+	legacy := "/private/ai-notes/bram"
+	if info, err := os.Stat(legacy); err == nil && info.IsDir() {
+		return legacy
+	}
+	return filepath.Join(home, ".local", "share", "bram", "mailbox")
 }

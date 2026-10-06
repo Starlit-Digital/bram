@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"time"
 
-	"bram/internal/config"
+	"github.com/cshaiku/bram/internal/config"
 )
 
 type Result struct {

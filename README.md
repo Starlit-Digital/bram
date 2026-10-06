@@ -1,87 +1,91 @@
 # Bram
 
-**Bram** is a local macOS daemon for routing prompts and responses between AI
-tools. It is intended to let Codex talk to Grok, or any other command-line AI
-tool, through one small, auditable local service.
+A small local router for command-line AI tools, maintained by [Starlit Digital](https://sltd.ca/).
 
-The name replaces the working title `bridge`. Bram is the product/repository
-name; bridging is only the job it performs.
+Bram runs an HTTP daemon, sends a prompt to a configured command over stdin,
+and returns its output, errors, exit code and elapsed time as JSON. You choose
+which commands it can run. It does not include an AI model or provider account.
 
-## What it does
+[Product page](https://sltd.ca/bram/) · [Source](https://github.com/cshaiku/bram) ·
+[Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
-- Runs a local HTTP daemon on `127.0.0.1:7878` by default.
-- Loads peer adapters from `~/.config/bram/config.json`.
-- Sends prompts to a configured peer command over stdin.
-- Returns structured JSON with stdout, stderr, exit code, duration, and errors.
-- Installs a first Grok mailbox peer as `grok`.
-- Provides a small CLI for health checks, peer listing, direct asks, and launchd
-  installation.
-- Installs locally under `$HOME/.local`, matching the SDF tool convention.
+**Version 0.2.0 · 0BSD · early development · macOS verified.**
+The Go router can be built elsewhere, but launchd is macOS-only and the full
+installer/mailbox workflow has not been qualified on Linux or Windows.
 
-## Quick start
+## Build and try it
+
+Requires Go 1.24.0 or later, Bash, Make and Python 3 for the mailbox helper/tests.
 
 ```sh
-make build
+git clone https://github.com/cshaiku/bram.git
+cd bram
+make compile
+./.build/bram daemon
+```
+
+With no configuration file, the daemon listens on `127.0.0.1:7878` and uses
+`/bin/cat` as its echo peer. In another terminal:
+
+```sh
+./.build/bram health
+./.build/bram peers
+./.build/bram ask --peer echo "hello from Bram"
+```
+
+This checks local routing without contacting an AI provider. Stop the foreground
+daemon with Ctrl-C.
+
+## Install
+
+```sh
+make build                       # compile and install
+make install                     # same as make build
+make compile                     # compile only to .build/bram
+make build PREFIX="$HOME/.local" # explicit installation prefix
+```
+
+The default installation copies `bram` and the `grok` mailbox wrapper into
+`$HOME/.local/bin`. **It replaces any existing commands with those names.**
+Previous commands are retained under `$HOME/.local/share/bram/installs/`.
+Use a different PREFIX if you already have another Grok CLI. Add your chosen
+prefix's `bin` directory to PATH. The receipt records source, commit, dirty
+state, version and executable digests. No repository symlink is installed.
+
+You can install only the Go CLI with
+`go install github.com/cshaiku/bram/cmd/bram@v0.2.0`; this does not install the
+mailbox wrapper or create an installation receipt.
+
+## Configure peers
+
+Configuration lives at `$XDG_CONFIG_HOME/bram/config.json`, or
+`$HOME/.config/bram/config.json` when XDG_CONFIG_HOME is unset. A peer is a
+command that reads a prompt on stdin and writes its answer on stdout.
+
+To review the example:
+
+```sh
 bram sample-config
-bram daemon
 ```
 
-In another terminal:
-
-```sh
-bram ask --peer echo "hello from Codex"
-```
-
-## Configuration
-
-Create `~/.config/bram/config.json`:
+Save a configuration explicitly; this command only prints the example.
+A minimal configuration is:
 
 ```json
 {
   "listen": "127.0.0.1:7878",
-  "default_peer": "grok",
+  "default_peer": "echo",
   "peers": {
-    "grok": {
-      "command": "grok",
-      "args": ["chat"],
-      "timeout": "2m"
-    },
-    "echo": {
-      "command": "/bin/cat",
-      "timeout": "10s"
-    }
+    "echo": {"command": "/bin/cat", "timeout": "10s"},
+    "grok": {"command": "grok", "args": ["chat"], "timeout": "2m"}
   }
 }
 ```
 
-Every peer command receives the prompt on stdin. This keeps Bram provider-neutral:
-Grok, Claude, local Ollama wrappers, shell scripts, and future AI tools all fit
-behind the same contract.
-
-## Grok Mailbox Peer
-
-Until Grok Bot exposes a supported stdin/stdout chat CLI, Bram installs a local
-`grok` mailbox peer. It reads a prompt from stdin, writes a request file, waits
-for Grok Bot to write the matching response file, and prints that response.
-
-Default mailbox paths:
-
-```text
-/private/ai-notes/bram/inbox/<id>.req.json
-/private/ai-notes/bram/outbox/<id>.res
-```
-
-Useful settings:
-
-```sh
-export BRAM_GROK_MAILBOX=/private/ai-notes/bram
-export BRAM_GROK_TIMEOUT_SECONDS=120
-export BRAM_GROK_POLL_SECONDS=0.2
-```
-
-Grok Bot should watch `inbox`, read each JSON request, and write plain text to
-the `response_path` named in the request. The wrapper supports both `grok` and
-`grok chat` so the sample config works as-is.
+Run `bram daemon --config /path/to/config.json` for a separate configuration.
+Peer names, commands and timeouts are validated when the daemon loads the file.
+Use trusted commands and keep the listener on loopback. The current API has no
+authentication, request/output size limits or concurrency limits; see SECURITY.md.
 
 ## HTTP API
 
@@ -93,32 +97,72 @@ curl -s http://127.0.0.1:7878/v1/ask \
   -d '{"peer":"echo","prompt":"hello"}'
 ```
 
-## macOS launchd
+`GET /v1/health` reports name, version and listener. `GET /v1/peers` lists
+configured peers. `POST /v1/ask` accepts a prompt and optional peer; a missing
+peer selects the default. Success returns `peer`, `output`, optional `stderr`,
+`exit_code` and `duration_ms`. A peer execution failure returns HTTP 502 and
+an `error`. Validation failures return 400; an unknown peer returns 404.
+
+## Grok mailbox helper
+
+The bundled `grok` command is a filesystem mailbox adapter, not an official
+Grok API integration. It needs a separate responder to read requests and write
+responses. Nothing in this release automatically connects to Grok Bot.
 
 ```sh
-bram launchd install
-bram launchd uninstall
+export BRAM_GROK_MAILBOX="$HOME/.local/share/bram/mailbox"
+export BRAM_GROK_TIMEOUT_SECONDS=120
+export BRAM_GROK_POLL_SECONDS=0.2
 ```
 
-The launch agent runs `bram daemon` and writes logs under
-`~/.local/share/bram/logs`.
+The mailbox defaults to `$HOME/.local/share/bram/mailbox`. Requests go to
+`inbox/<id>.req.json`; the responder writes complete plain text to the
+request's `response_path` under `outbox/`. Publish the response atomically after
+writing it: the wrapper reads as soon as the file exists. Files contain prompts
+and responses and are not automatically removed. The wrapper accepts `grok` and
+`grok chat`; `grok --help` describes its protocol. Python 3 and `uuidgen` are
+needed. A mock responder is supplied for tests, not real AI answers.
 
-## Local developer installation
+## macOS background service
 
 ```sh
-make build                       # compile and install ~/.local/bin/bram
-                                 # and ~/.local/bin/grok
-make compile                     # compile only to .build/bram
-make build PREFIX="$HOME/.local" # explicit installation prefix
+bram launchd plist                # review generated configuration
+bram launchd install              # install and start the LaunchAgent
+bram launchd uninstall            # unload and remove it
 ```
 
-`make install` is equivalent to `make build`. The installed executable is copied
-out of the checkout, so moving the source repo does not break it.
+The agent uses `$HOME/.local/bin/bram`; a custom PREFIX requires your own service
+configuration. Logs live under `$HOME/.local/share/bram/logs`. The original
+`ca.simmonsdigitalfoundry.bram` service label remains for upgrade compatibility
+so a second daemon is not created. Starlit Digital maintains Bram.
 
-## Testing
+When generating the agent, an explicit BRAM_GROK_MAILBOX wins. Existing
+`/private/ai-notes/bram` directories retain the old mailbox path; new installations
+use the home-directory default. Moving the source checkout does not move data,
+change existing agent files, or restart a running service.
+
+## Test and release evidence
 
 ```sh
-go test ./...
+go test -count=1 ./...
+go vet ./...
 python3 scripts/test-local-install.py
 python3 scripts/test-grok-mailbox.py
 ```
+
+The install test uses a temporary prefix; the mailbox test uses a local mock.
+They do not exercise real AI providers. Version agreement and launchd mailbox
+selection have focused tests. CI runs these checks on macOS; its result must be
+checked separately from local evidence. See [release evidence](docs/RELEASE_EVIDENCE.md).
+
+The optional Starlit development collector reads source-bound reports at
+`build/release-evidence/latest.json`; it never runs tests. Its three required
+IDs are `bram-go-tests`, `bram-local-install` and `bram-grok-mailbox`. Reports
+include the commit and complete non-documentation source hash. Source changes
+invalidate them. Local setup is described in [operations](docs/OPERATIONS.md).
+
+## License
+
+Bram uses the [BSD Zero Clause license (0BSD)](LICENSE), the same license as
+Starlit Digital's Loom. You may use, copy, modify and distribute it, including
+commercially. See the license for its terms and warranty disclaimer.

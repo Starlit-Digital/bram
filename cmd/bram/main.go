@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"bram/internal/app"
+	"github.com/cshaiku/bram/internal/app"
 )
 
 func main() {

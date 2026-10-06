@@ -77,6 +77,8 @@ grok_sha="$(shasum -a 256 "$bin_dir/$GROK_PEER_NAME" | awk '{print $1}')"
 
 cat > "$share_dir/install-info.txt" <<INFO
 tool: $APP_NAME
+owner: Starlit Digital
+version: $(cat VERSION)
 source: $ROOT_DIR
 commit: $commit
 dirty: $dirty

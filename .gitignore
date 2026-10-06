@@ -1,2 +1,6 @@
 .build/
 
+# Local source-bound validation reports
+build/release-evidence/
+
+.DS_Store

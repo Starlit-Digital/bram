@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"bram/internal/config"
+	"github.com/cshaiku/bram/internal/config"
 )
 
 func TestAskSendsPromptToCommandStdin(t *testing.T) {

@@ -10,9 +10,9 @@ import (
 	"sort"
 	"time"
 
-	"bram/internal/appinfo"
-	"bram/internal/config"
-	"bram/internal/peer"
+	"github.com/cshaiku/bram/internal/appinfo"
+	"github.com/cshaiku/bram/internal/config"
+	"github.com/cshaiku/bram/internal/peer"
 )
 
 type Server struct {

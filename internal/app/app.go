@@ -12,10 +12,10 @@ import (
 	"os"
 	"strings"
 
-	"bram/internal/appinfo"
-	"bram/internal/config"
-	"bram/internal/daemon"
-	"bram/internal/launchd"
+	"github.com/cshaiku/bram/internal/appinfo"
+	"github.com/cshaiku/bram/internal/config"
+	"github.com/cshaiku/bram/internal/daemon"
+	"github.com/cshaiku/bram/internal/launchd"
 )
 
 func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
