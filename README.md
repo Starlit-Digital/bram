@@ -3,13 +3,13 @@
 A small local router for command-line AI tools, maintained by [Starlit Digital](https://sltd.ca/).
 
 Bram runs an HTTP daemon, sends a prompt to a configured command over stdin,
-and returns its output, errors, exit code and elapsed time as JSON. You choose
+and returns its output, errors, exit code and elapsed time as JSON or GCF. You choose
 which commands it can run. It does not include an AI model or provider account.
 
 [Product page](https://sltd.ca/bram/) · [Source](https://github.com/cshaiku/bram) ·
 [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
-**Version 0.2.0 · 0BSD · early development · macOS verified.**
+**Version 0.3.0 · 0BSD · early development · macOS verified.**
 The Go router can be built elsewhere, but launchd is macOS-only and the full
 installer/mailbox workflow has not been qualified on Linux or Windows.
 
@@ -53,7 +53,7 @@ prefix's `bin` directory to PATH. The receipt records source, commit, dirty
 state, version and executable digests. No repository symlink is installed.
 
 You can install only the Go CLI with
-`go install github.com/cshaiku/bram/cmd/bram@v0.2.0`; this does not install the
+`go install github.com/cshaiku/bram/cmd/bram@v0.3.0`; this does not install the
 mailbox wrapper or create an installation receipt.
 
 ## Configure peers
@@ -84,8 +84,9 @@ A minimal configuration is:
 
 Run `bram daemon --config /path/to/config.json` for a separate configuration.
 Peer names, commands and timeouts are validated when the daemon loads the file.
-Use trusted commands and keep the listener on loopback. The current API has no
-authentication, request/output size limits or concurrency limits; see SECURITY.md.
+Use trusted commands and keep the listener on loopback. Structured input and output are capped at 64 MiB. The API has no authentication
+or concurrency controls, and peer output is still buffered without a subprocess
+output limit; see SECURITY.md.
 
 ## HTTP API
 
@@ -102,6 +103,40 @@ configured peers. `POST /v1/ask` accepts a prompt and optional peer; a missing
 peer selects the default. Success returns `peer`, `output`, optional `stderr`,
 `exit_code` and `duration_ms`. A peer execution failure returns HTTP 502 and
 an `error`. Validation failures return 400; an unknown peer returns 404.
+
+## GCF interchange
+
+GCF (Generic Context Format) is an alternative structured representation, using
+pinned gcf-go v1.8.0. JSON remains the API default and `ask` still prints plain
+text by default. The mailbox protocol remains JSON/plain text.
+
+```sh
+bram capabilities --format gcf
+bram data encode input.json --format gcf
+bram data decode input.gcf --format json
+bram data stats input.json
+bram ask --peer echo --format gcf "hello"
+bram health --format gcf
+bram peers --format auto
+```
+
+`data` accepts a file or `-` for stdin. Encode defaults to GCF; decode, stats and
+capabilities default to JSON. `auto` chooses the smaller complete encoding, JSON
+on ties, and falls back to JSON for values GCF cannot preserve. Stats compare bytes,
+not LLM tokens. Conversion does not run peers or start a daemon.
+
+The API accepts complete JSON or generic-GCF request bodies on the same routes.
+Use `Content-Type: application/gcf` for GCF requests. Request GCF responses with
+`Accept: application/gcf` or `?format=gcf`; `?format=auto` selects the smaller
+encoding. The response Content-Type identifies the selected encoding, including
+structured failures. Existing JSON requests/responses remain supported.
+
+Configuration also accepts GCF: use `bram daemon --config config.gcf` explicitly.
+Default config lookup still uses config.json. Only complete generic snapshots are
+accepted; graph/session-delta profiles and invalid UTF-8/trailing data are rejected.
+Input, decoded data and encoded output are limited to 64 MiB. The peer process can
+still allocate more output before response admission. GCF does not normalize the
+meaning of a provider's text or change command permissions.
 
 ## Grok mailbox helper
 

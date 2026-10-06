@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 — 2026-10-06
+
+- Add bounded JSON/generic-GCF conversion, byte stats and discovery using pinned
+  Apache-2.0 gcf-go v1.8.0, with dependency notices and its license.
+- Add CLI result formats to ask/health/peers, retaining plain ask and JSON defaults.
+- Accept GCF configuration and API requests; negotiate GCF/Auto responses and
+  structured errors using Accept or the format query.
+- Reject invalid UTF-8, trailing data, stateful profiles and oversized wire data.
+- Add API success/error/JSON compatibility and codec round-trip/limit tests.
+- Preserve peer execution, mailbox JSON/plain text, config paths and service identity.
+
+
 ## 0.2.0 — 2026-10-06
 
 First public Starlit Digital release, licensed under 0BSD to match Loom.

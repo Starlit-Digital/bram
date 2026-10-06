@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cshaiku/bram/internal/structured"
 	"os"
 	"path/filepath"
 	"time"
@@ -47,11 +48,15 @@ func Load(path string) (Config, error) {
 		}
 	}
 
-	b, err := os.ReadFile(path)
+	b, err := structured.ReadFile(path, structured.MaxBytes)
 	if err != nil {
 		return Config{}, err
 	}
 
+	b, err = structured.JSON(b, structured.MaxBytes)
+	if err != nil {
+		return Config{}, fmt.Errorf("read %s: %w", path, err)
+	}
 	var cfg Config
 	if err := json.Unmarshal(b, &cfg); err != nil {
 		return Config{}, fmt.Errorf("read %s: %w", path, err)

@@ -1,13 +1,18 @@
 package daemon
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cshaiku/bram/internal/structured"
+	"io"
+	"mime"
 	"net"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/cshaiku/bram/internal/appinfo"
@@ -37,9 +42,9 @@ type AskResponse struct {
 func New(cfg config.Config) *Server {
 	mux := http.NewServeMux()
 	s := &Server{cfg: cfg}
-	mux.HandleFunc("/v1/health", s.health)
-	mux.HandleFunc("/v1/peers", s.peers)
-	mux.HandleFunc("/v1/ask", s.ask)
+	mux.HandleFunc("/v1/health", negotiate(s.health))
+	mux.HandleFunc("/v1/peers", negotiate(s.peers))
+	mux.HandleFunc("/v1/ask", negotiate(s.ask))
 	s.server = &http.Server{
 		Addr:              cfg.Listen,
 		Handler:           mux,
@@ -73,10 +78,10 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 
 func (s *Server) health(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		writeError(w, r, http.StatusMethodNotAllowed, "method not allowed")
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
+	writeJSON(w, r, http.StatusOK, map[string]any{
 		"ok":      true,
 		"name":    "bram",
 		"version": appinfo.Version,
@@ -86,7 +91,7 @@ func (s *Server) health(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) peers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		writeError(w, r, http.StatusMethodNotAllowed, "method not allowed")
 		return
 	}
 	names := make([]string, 0, len(s.cfg.Peers))
@@ -94,7 +99,7 @@ func (s *Server) peers(w http.ResponseWriter, r *http.Request) {
 		names = append(names, name)
 	}
 	sort.Strings(names)
-	writeJSON(w, http.StatusOK, map[string]any{
+	writeJSON(w, r, http.StatusOK, map[string]any{
 		"default_peer": s.cfg.DefaultPeer,
 		"peers":        names,
 	})
@@ -102,18 +107,28 @@ func (s *Server) peers(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) ask(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		writeError(w, r, http.StatusMethodNotAllowed, "method not allowed")
 		return
 	}
 	defer r.Body.Close()
 
 	var req AskRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid JSON")
+	body, err := io.ReadAll(io.LimitReader(r.Body, structured.MaxBytes+1))
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, "unreadable request")
+		return
+	}
+	body, err = structured.JSON(body, structured.MaxBytes)
+	if err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid JSON/GCF request")
+		return
+	}
+	if err := json.NewDecoder(bytes.NewReader(body)).Decode(&req); err != nil {
+		writeError(w, r, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 	if req.Prompt == "" {
-		writeError(w, http.StatusBadRequest, "prompt is required")
+		writeError(w, r, http.StatusBadRequest, "prompt is required")
 		return
 	}
 	name := req.Peer
@@ -121,12 +136,12 @@ func (s *Server) ask(w http.ResponseWriter, r *http.Request) {
 		name = s.cfg.DefaultPeer
 	}
 	if name == "" {
-		writeError(w, http.StatusBadRequest, "peer is required")
+		writeError(w, r, http.StatusBadRequest, "peer is required")
 		return
 	}
 	spec, ok := s.cfg.Peers[name]
 	if !ok {
-		writeError(w, http.StatusNotFound, fmt.Sprintf("peer %q is not configured", name))
+		writeError(w, r, http.StatusNotFound, fmt.Sprintf("peer %q is not configured", name))
 		return
 	}
 
@@ -140,18 +155,57 @@ func (s *Server) ask(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		resp.Error = err.Error()
-		writeJSON(w, http.StatusBadGateway, resp)
+		writeJSON(w, r, http.StatusBadGateway, resp)
 		return
 	}
-	writeJSON(w, http.StatusOK, resp)
+	writeJSON(w, r, http.StatusOK, resp)
 }
 
-func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, map[string]string{"error": message})
+func writeError(w http.ResponseWriter, r *http.Request, status int, message string) {
+	writeJSON(w, r, status, map[string]string{"error": message})
 }
 
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("content-type", "application/json")
+func writeJSON(w http.ResponseWriter, r *http.Request, status int, v any) {
+	format, err := responseFormat(r)
+	if err != nil {
+		format = "json"
+	}
+	body, err := structured.Marshal(v, format)
+	if err != nil {
+		status = http.StatusInternalServerError
+		body = []byte(`{"error":"response encoding failed"}`)
+	}
+	contentType := "application/json"
+	if bytes.HasPrefix(body, []byte("GCF")) {
+		contentType = "application/gcf"
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Vary", "Accept")
 	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
+	_, _ = w.Write(append(body, '\n'))
+}
+
+func responseFormat(r *http.Request) (string, error) {
+	if format := r.URL.Query().Get("format"); format != "" {
+		if !structured.ValidFormat(format) {
+			return "", fmt.Errorf("invalid response format")
+		}
+		return format, nil
+	}
+	for _, accept := range strings.Split(r.Header.Get("Accept"), ",") {
+		kind, params, err := mime.ParseMediaType(strings.TrimSpace(accept))
+		if err == nil && kind == "application/gcf" && params["q"] != "0" {
+			return "gcf", nil
+		}
+	}
+	return "json", nil
+}
+func negotiate(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if _, err := responseFormat(r); err != nil {
+			writeError(w, r, http.StatusBadRequest, err.Error())
+			return
+		}
+		handler(w, r)
+	}
 }

@@ -16,9 +16,16 @@ import (
 	"github.com/cshaiku/bram/internal/config"
 	"github.com/cshaiku/bram/internal/daemon"
 	"github.com/cshaiku/bram/internal/launchd"
+	"github.com/cshaiku/bram/internal/structured"
 )
 
 func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
+	if handled, code := structured.Command(args, "bram", stdout, stderr); handled {
+		if code != 0 {
+			return errors.New("structured command failed")
+		}
+		return nil
+	}
 	if len(args) == 0 {
 		return usage(stdout)
 	}
@@ -57,6 +64,10 @@ Usage:
   bram sample-config
   bram launchd install|uninstall|plist
   bram version
+  bram capabilities [--format json|gcf|auto]
+  bram data encode|decode|stats FILE|- [--format json|gcf|auto]
+
+Ask supports --format text|json|gcf|auto; health and peers support --format json|gcf|auto.
 `)
 	return err
 }
@@ -89,23 +100,34 @@ func runAsk(ctx context.Context, args []string, stdout io.Writer) error {
 	fs := flag.NewFlagSet("ask", flag.ContinueOnError)
 	addr := fs.String("addr", "http://127.0.0.1:7878", "daemon URL")
 	peer := fs.String("peer", "", "peer name")
+	format := fs.String("format", "text", "result format: text, json, gcf or auto")
 	if err := fs.Parse(args); err != nil {
 		return err
+	}
+	if *format != "text" && !structured.ValidFormat(*format) {
+		return errors.New("invalid result format")
 	}
 	prompt := strings.TrimSpace(strings.Join(fs.Args(), " "))
 	if prompt == "" {
 		return errors.New("prompt is required")
 	}
 
-	body, err := json.Marshal(daemon.AskRequest{Peer: *peer, Prompt: prompt})
+	requestFormat := *format
+	if requestFormat == "text" {
+		requestFormat = "json"
+	}
+	body, err := structured.Marshal(daemon.AskRequest{Peer: *peer, Prompt: prompt}, requestFormat)
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimRight(*addr, "/")+"/v1/ask", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimRight(*addr, "/")+"/v1/ask?format="+requestFormat, bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("content-type", "application/json")
+	if bytes.HasPrefix(body, []byte("GCF")) {
+		req.Header.Set("content-type", "application/gcf")
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -113,9 +135,26 @@ func runAsk(ctx context.Context, args []string, stdout io.Writer) error {
 	}
 	defer resp.Body.Close()
 
-	var out daemon.AskResponse
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+	wire, err := io.ReadAll(io.LimitReader(resp.Body, structured.MaxBytes+1))
+	if err != nil {
 		return err
+	}
+	decoded, err := structured.JSON(wire, structured.MaxBytes)
+	if err != nil {
+		return err
+	}
+	var out daemon.AskResponse
+	if err := json.Unmarshal(decoded, &out); err != nil {
+		return err
+	}
+	if *format != "text" {
+		encoded, err := structured.Marshal(out, *format)
+		if err != nil {
+			return err
+		}
+		if _, err = stdout.Write(append(encoded, '\n')); err != nil {
+			return err
+		}
 	}
 	if resp.StatusCode >= 400 {
 		if out.Error != "" {
@@ -124,6 +163,9 @@ func runAsk(ctx context.Context, args []string, stdout io.Writer) error {
 		return fmt.Errorf("daemon returned %s", resp.Status)
 	}
 
+	if *format != "text" {
+		return nil
+	}
 	if out.Stderr != "" {
 		fmt.Fprintf(stdout, "stderr:\n%s\n", out.Stderr)
 	}
@@ -137,23 +179,31 @@ func runAsk(ctx context.Context, args []string, stdout io.Writer) error {
 func runPeers(ctx context.Context, args []string, stdout io.Writer) error {
 	fs := flag.NewFlagSet("peers", flag.ContinueOnError)
 	addr := fs.String("addr", "http://127.0.0.1:7878", "daemon URL")
+	format := fs.String("format", "json", "result format: json, gcf or auto")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	return getJSON(ctx, strings.TrimRight(*addr, "/")+"/v1/peers", stdout)
+	if !structured.ValidFormat(*format) {
+		return errors.New("invalid result format")
+	}
+	return getJSON(ctx, strings.TrimRight(*addr, "/")+"/v1/peers", stdout, *format)
 }
 
 func runHealth(ctx context.Context, args []string, stdout io.Writer) error {
 	fs := flag.NewFlagSet("health", flag.ContinueOnError)
 	addr := fs.String("addr", "http://127.0.0.1:7878", "daemon URL")
+	format := fs.String("format", "json", "result format: json, gcf or auto")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	return getJSON(ctx, strings.TrimRight(*addr, "/")+"/v1/health", stdout)
+	if !structured.ValidFormat(*format) {
+		return errors.New("invalid result format")
+	}
+	return getJSON(ctx, strings.TrimRight(*addr, "/")+"/v1/health", stdout, *format)
 }
 
-func getJSON(ctx context.Context, url string, stdout io.Writer) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+func getJSON(ctx context.Context, url string, stdout io.Writer, format string) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url+"?format="+format, nil)
 	if err != nil {
 		return err
 	}
@@ -163,12 +213,25 @@ func getJSON(ctx context.Context, url string, stdout io.Writer) error {
 	}
 	defer resp.Body.Close()
 
-	var pretty bytes.Buffer
-	if err := json.Indent(&pretty, mustRead(resp.Body), "", "  "); err != nil {
+	data, err := io.ReadAll(io.LimitReader(resp.Body, structured.MaxBytes+1))
+	if err != nil {
 		return err
 	}
-	pretty.WriteByte('\n')
-	_, err = stdout.Write(pretty.Bytes())
+	data, err = structured.JSON(data, structured.MaxBytes)
+	if err != nil {
+		return err
+	}
+	var value any
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.UseNumber()
+	if err = decoder.Decode(&value); err != nil {
+		return err
+	}
+	wire, err := structured.Marshal(value, format)
+	if err != nil {
+		return err
+	}
+	_, err = stdout.Write(append(wire, '\n'))
 	return err
 }
 
