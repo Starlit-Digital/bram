@@ -199,5 +199,5 @@ invalidate them. Local setup is described in [operations](docs/OPERATIONS.md).
 ## License
 
 Bram uses the [BSD Zero Clause license (0BSD)](LICENSE), the same license as
-Starlit Digital's Loom. You may use, copy, modify and distribute it, including
+Starlit Digital's loom. You may use, copy, modify and distribute it, including
 commercially. See the license for its terms and warranty disclaimer.

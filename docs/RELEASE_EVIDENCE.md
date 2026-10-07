@@ -34,11 +34,11 @@ the live source for the public release.
 Fresh local source passed `go test -count=1 ./...`, `go vet ./...`, the
 Python local installer checks, and `git diff --check` on this Mac.
 Fresh compile-only binaries exchanged generic GCF in both directions between
-Bram and Loom, preserving Unicode, a numeric string, and an integer above
+Bram and loom, preserving Unicode, a numeric string, and an integer above
 JavaScript’s exact-number range. Capability output matched VERSION.
 
 Tests cover invalid profiles and input bounds. Bram additionally passed the
-mailbox helper checks and GCF HTTP success/error and config tests. Loom tests
+mailbox helper checks and GCF HTTP success/error and config tests. loom tests
 cover report equivalence, manifest/profile inputs and overwrite protection;
 `verify --json` and `checks:command-catalog --json` passed.
 
