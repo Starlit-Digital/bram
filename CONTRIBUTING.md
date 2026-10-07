@@ -1,6 +1,6 @@
-# Contributing to Bram
+# Contributing to bram
 
-Bram is maintained by Starlit Digital. Use GitHub issues for bugs and focused
+bram is maintained by Starlit Digital. Use GitHub issues for bugs and focused
 proposals, and pull requests for changes. Security reports belong at security@sltd.ca.
 
 Read README.md, SECURITY.md and AGENTS.md. Use the Go version in go.mod.

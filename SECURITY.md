@@ -1,6 +1,6 @@
 # Security
 
-Bram 0.3.x is early-development software for trusted local workflows.
+bram 0.3.x is early-development software for trusted local workflows.
 Report security issues privately to security@sltd.ca; include the version,
 reproduction steps and impact. Do not publish secrets or live prompts in an issue.
 No response-time or patch-support commitment is currently offered.
@@ -14,7 +14,7 @@ isolate other local users or processes. TLS, browser-origin checks, concurrency 
 data and configuration are capped at 64 MiB; only generic snapshots are accepted.
 
 Peer commands run with the daemon user's privileges and inherited environment.
-They may contact external providers and incur costs. Bram itself does not supply
+They may contact external providers and incur costs. bram itself does not supply
 credentials or guarantee a provider's privacy behavior. Command timeouts are
 implemented, but do not constitute a sandbox or full descendant-process isolation.
 

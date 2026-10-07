@@ -1,6 +1,6 @@
 # Grok adapter handoff
 
-Bram is Starlit Digital's 0BSD local command-peer router. README.md owns setup
+bram is Starlit Digital's 0BSD local command-peer router. README.md owns setup
 and behavior; SECURITY.md owns the current trust boundaries; CHANGELOG.md owns
 release history. See docs/OPERATIONS.md for the studio checkout and reports.
 

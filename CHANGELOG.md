@@ -25,7 +25,7 @@ First public Starlit Digital release, licensed under 0BSD to match loom.
 - Retain the original LaunchAgent label for upgrade compatibility.
 - Correct the quick start: sample-config prints JSON and does not save it.
 - Add version/launchd tests and a macOS CI workflow; record scoped release evidence.
-- Add the Bram product page and product listing on sltd.ca.
+- Add the bram product page and product listing on sltd.ca.
 
 Existing local settings, mailbox files and running services are not migrated or
 restarted by moving the source. Remote-provider integration, streaming, API

@@ -5,7 +5,7 @@
 - Fresh `go test -count=1 ./...` passed: config, peer execution,
   release version agreement and LaunchAgent mailbox/identity/XML behavior.
 - `go vet ./...` passed.
-- Temporary-prefix installer check passed: Bram/helper copies, receipts,
+- Temporary-prefix installer check passed: bram/helper copies, receipts,
   version/help behavior and compile-only lane.
 - Mock mailbox check passed with an isolated temporary directory.
 - An isolated daemon on a temporary loopback port passed HTTP health/version,
@@ -34,10 +34,10 @@ the live source for the public release.
 Fresh local source passed `go test -count=1 ./...`, `go vet ./...`, the
 Python local installer checks, and `git diff --check` on this Mac.
 Fresh compile-only binaries exchanged generic GCF in both directions between
-Bram and loom, preserving Unicode, a numeric string, and an integer above
+bram and loom, preserving Unicode, a numeric string, and an integer above
 JavaScript’s exact-number range. Capability output matched VERSION.
 
-Tests cover invalid profiles and input bounds. Bram additionally passed the
+Tests cover invalid profiles and input bounds. bram additionally passed the
 mailbox helper checks and GCF HTTP success/error and config tests. loom tests
 cover report equivalence, manifest/profile inputs and overwrite protection;
 `verify --json` and `checks:command-catalog --json` passed.
@@ -46,3 +46,14 @@ These are source checks, not a tagged binary release or current Linux/Windows
 qualification. No real provider or live daemon was used. README, changelog,
 interface documentation and third-party licensing were compared with live source.
 The existing website release links still refer to the previously tagged releases.
+
+## Documentation naming sweep — 2026-10-06
+
+Product display names use lowercase loom, nora, bram and clyde. The four tracked
+documentation trees, issue templates, textual help images and clyde manual were
+checked. Technical environment-variable names, Go identifiers and the loom
+LOOM-BEGIN/LOOM-END source markers retain their executable spelling. nora's
+tracked documentation already matched. This changes presentation only; existing
+release versions, behavior, feature/license promises and platform evidence remain
+applicable. clyde's manual generation/check, GitHub policy check and SVG XML
+validation passed. No new runtime release or installer change is claimed.
