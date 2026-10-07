@@ -3,6 +3,7 @@ package structured
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/cshaiku/bram/internal/appinfo"
 	"testing"
 )
 
@@ -60,6 +61,10 @@ func TestCommands(t *testing.T) {
 	handled, code := Command([]string{"capabilities"}, "test-tool", &out, &errout)
 	if !handled || code != 0 || !bytes.Contains(out.Bytes(), []byte("data encode")) {
 		t.Fatalf("discovery: %s %s", out.Bytes(), errout.Bytes())
+	}
+	var discovery map[string]any
+	if err := json.Unmarshal(out.Bytes(), &discovery); err != nil || discovery["version"] != appinfo.Version {
+		t.Fatalf("capabilities version must match app version: %s", out.Bytes())
 	}
 	out.Reset()
 	errout.Reset()

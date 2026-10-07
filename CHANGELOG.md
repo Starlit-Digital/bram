@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Report the shared application version in capabilities instead of a stale literal.
+- Align README source version and canonical repository links with 0.3.1.
+- Use the available v0.2.0 tag in the Go-only installation example and distinguish
+  it from current untagged source, without changing the Go module path.
+
 ## 0.3.1 — 2026-10-06
 
 - Migrate launchd installation to ca.starlitdigital.bram, preserving mailbox settings and restoring the legacy job if replacement bootstrap fails.

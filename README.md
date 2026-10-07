@@ -6,10 +6,10 @@ bram runs an HTTP daemon, sends a prompt to a configured command over stdin,
 and returns its output, errors, exit code and elapsed time as JSON or GCF. You choose
 which commands it can run. It does not include an AI model or provider account.
 
-[Product page](https://sltd.ca/bram/) · [Source](https://github.com/cshaiku/bram) ·
+[Product page](https://sltd.ca/bram/) · [Source](https://github.com/Starlit-Digital/bram) ·
 [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
-**Version 0.3.0 · 0BSD · early development · macOS verified.**
+**Source version 0.3.1 · 0BSD · early development · macOS verified.**
 The Go router can be built elsewhere, but launchd is macOS-only and the full
 installer/mailbox workflow has not been qualified on Linux or Windows.
 
@@ -18,7 +18,7 @@ installer/mailbox workflow has not been qualified on Linux or Windows.
 Requires Go 1.24.0 or later, Bash, Make and Python 3 for the mailbox helper/tests.
 
 ```sh
-git clone https://github.com/cshaiku/bram.git
+git clone https://github.com/Starlit-Digital/bram.git
 cd bram
 make compile
 ./.build/bram daemon
@@ -52,9 +52,16 @@ Use a different PREFIX if you already have another Grok CLI. Add your chosen
 prefix's `bin` directory to PATH. The receipt records source, commit, dirty
 state, version and executable digests. No repository symlink is installed.
 
-You can install only the Go CLI with
-`go install github.com/cshaiku/bram/cmd/bram@v0.3.0`; this does not install the
-mailbox wrapper or create an installation receipt.
+For the current 0.3.1 source, clone the canonical repository and use `make build`.
+The latest published tag is `v0.2.0`; to install only that tagged Go CLI:
+
+```sh
+go install github.com/cshaiku/bram/cmd/bram@v0.2.0
+```
+
+The Go module path remains `github.com/cshaiku/bram` for compatibility. This
+older tagged installation does not include the mailbox wrapper, an installation
+receipt, or the changes in 0.3.0 and 0.3.1. Those source versions are not tagged.
 
 ## Configure peers
 
@@ -167,9 +174,10 @@ bram launchd uninstall            # unload and remove it
 ```
 
 The agent uses `$HOME/.local/bin/bram`; a custom PREFIX requires your own service
-configuration. Logs live under `$HOME/.local/share/bram/logs`. The
-`ca.starlitdigital.bram` is the current service label; install unloads the legacy label and removes its plist after successful replacement
-so a second daemon is not created. Starlit Digital maintains bram.
+configuration. Logs live under `$HOME/.local/share/bram/logs`.
+`ca.starlitdigital.bram` is the current service label. Install unloads the legacy
+label and removes its plist after successful replacement, so a second daemon is
+not created. Starlit Digital maintains bram.
 
 When generating the agent, an explicit BRAM_GROK_MAILBOX wins. Existing
 `/private/ai-notes/bram` directories retain the old mailbox path; new installations
