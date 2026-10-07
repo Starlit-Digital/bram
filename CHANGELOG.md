@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1 — 2026-10-06
+
+- Migrate launchd installation to ca.starlitdigital.bram, preserving mailbox settings and restoring the legacy job if replacement bootstrap fails.
+- Use the canonical Starlit Mac tool configuration path.
+
 ## 0.3.0 — 2026-10-06
 
 - Add bounded JSON/generic-GCF conversion, byte stats and discovery using pinned

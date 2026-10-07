@@ -9,8 +9,10 @@ import (
 	"strings"
 )
 
-// Retained for upgrade compatibility; product ownership is Starlit Digital.
-const label = "ca.simmonsdigitalfoundry.bram"
+const label = "ca.starlitdigital.bram"
+
+// Read only during upgrade; current installs never create this label.
+const legacyLabel = "ca.simmonsdigitalfoundry.bram"
 
 func Install() (string, error) {
 	plist, err := Plist()
@@ -28,7 +30,20 @@ func Install() (string, error) {
 		return "", err
 	}
 	_ = exec.Command("launchctl", "bootout", "gui/"+fmt.Sprint(os.Getuid()), path).Run()
+	legacyPath := filepath.Join(filepath.Dir(path), legacyLabel+".plist")
+	legacyLoaded := exec.Command("launchctl", "print", "gui/"+fmt.Sprint(os.Getuid())+"/"+legacyLabel).Run() == nil
+	if legacyLoaded {
+		if err := exec.Command("launchctl", "bootout", "gui/"+fmt.Sprint(os.Getuid())+"/"+legacyLabel).Run(); err != nil {
+			return path, err
+		}
+	}
 	if err := exec.Command("launchctl", "bootstrap", "gui/"+fmt.Sprint(os.Getuid()), path).Run(); err != nil {
+		if legacyLoaded {
+			_ = exec.Command("launchctl", "bootstrap", "gui/"+fmt.Sprint(os.Getuid()), legacyPath).Run()
+		}
+		return path, err
+	}
+	if err := os.Remove(legacyPath); err != nil && !os.IsNotExist(err) {
 		return path, err
 	}
 	return path, nil

@@ -167,8 +167,8 @@ bram launchd uninstall            # unload and remove it
 ```
 
 The agent uses `$HOME/.local/bin/bram`; a custom PREFIX requires your own service
-configuration. Logs live under `$HOME/.local/share/bram/logs`. The original
-`ca.simmonsdigitalfoundry.bram` service label remains for upgrade compatibility
+configuration. Logs live under `$HOME/.local/share/bram/logs`. The
+`ca.starlitdigital.bram` is the current service label; install unloads the legacy label and removes its plist after successful replacement
 so a second daemon is not created. Starlit Digital maintains bram.
 
 When generating the agent, an explicit BRAM_GROK_MAILBOX wins. Existing
