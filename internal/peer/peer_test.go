@@ -2,6 +2,7 @@ package peer
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/cshaiku/bram/internal/config"
@@ -20,6 +21,13 @@ func TestAskSendsPromptToCommandStdin(t *testing.T) {
 	}
 	if result.ExitCode != 0 {
 		t.Fatalf("ExitCode = %d, want 0", result.ExitCode)
+	}
+}
+
+func TestOutputLimitCancelsPeer(t *testing.T) {
+	result, err := Ask(context.Background(), config.Peer{Command: "/bin/sh", Args: []string{"-c", "while :; do printf '" + strings.Repeat("x", 4096) + "'; done"}, Timeout: "5s"}, "synthetic")
+	if err == nil || !strings.Contains(err.Error(), "exceeded limit") || len(result.Output) > 2<<20 {
+		t.Fatalf("bytes=%d err=%v", len(result.Output), err)
 	}
 }
 

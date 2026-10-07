@@ -7,10 +7,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/cshaiku/bram/internal/toolbridge"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/cshaiku/bram/internal/appinfo"
 	"github.com/cshaiku/bram/internal/config"
@@ -20,6 +22,12 @@ import (
 )
 
 func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
+	if handled, code := toolbridge.Handle(args, "bram", appinfo.Version, stdout, stderr); handled {
+		if code != 0 {
+			return errors.New("tool workflow failed")
+		}
+		return nil
+	}
 	if handled, code := structured.Command(args, "bram", stdout, stderr); handled {
 		if code != 0 {
 			return errors.New("structured command failed")
@@ -58,11 +66,12 @@ func usage(w io.Writer) error {
 
 Usage:
   bram daemon [--config path] [--listen addr]
-  bram ask [--addr url] [--peer name] prompt...
+  bram ask [--addr url] [--peer name] [--input FILE|-] [prompt...]
   bram peers [--addr url]
   bram health [--addr url]
   bram sample-config
   bram launchd install|uninstall|plist
+  bram tools doctor|plan|run|identity|help
   bram version
   bram capabilities [--format json|gcf|auto]
   bram data encode|decode|stats FILE|- [--format json|gcf|auto]
@@ -101,15 +110,16 @@ func runAsk(ctx context.Context, args []string, stdout io.Writer) error {
 	addr := fs.String("addr", "http://127.0.0.1:7878", "daemon URL")
 	peer := fs.String("peer", "", "peer name")
 	format := fs.String("format", "text", "result format: text, json, gcf or auto")
+	input := fs.String("input", "", "append a UTF-8 report from a file or - for stdin (up to 1 MiB)")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 	if *format != "text" && !structured.ValidFormat(*format) {
 		return errors.New("invalid result format")
 	}
-	prompt := strings.TrimSpace(strings.Join(fs.Args(), " "))
-	if prompt == "" {
-		return errors.New("prompt is required")
+	prompt, err := loadPrompt(*input, strings.Join(fs.Args(), " "), os.Stdin)
+	if err != nil {
+		return err
 	}
 
 	requestFormat := *format
@@ -174,6 +184,43 @@ func runAsk(ctx context.Context, args []string, stdout io.Writer) error {
 		fmt.Fprintln(stdout)
 	}
 	return nil
+}
+
+func loadPrompt(path, prefix string, stdin io.Reader) (string, error) {
+	prompt := strings.TrimSpace(prefix)
+	if path != "" {
+		reader := stdin
+		if path != "-" {
+			f, err := os.Open(path)
+			if err != nil {
+				return "", err
+			}
+			defer f.Close()
+			info, err := f.Stat()
+			if err != nil || !info.Mode().IsRegular() {
+				return "", errors.New("prompt input must be a regular file")
+			}
+			reader = f
+		}
+		data, err := io.ReadAll(io.LimitReader(reader, (1<<20)+1))
+		if err != nil {
+			return "", err
+		}
+		if len(data) > 1<<20 {
+			return "", errors.New("prompt input exceeds 1 MiB")
+		}
+		if !utf8.Valid(data) {
+			return "", errors.New("prompt input is not UTF-8")
+		}
+		if prompt != "" {
+			prompt += "\n\n"
+		}
+		prompt += strings.TrimSpace(string(data))
+	}
+	if prompt == "" {
+		return "", errors.New("prompt is required")
+	}
+	return prompt, nil
 }
 
 func runPeers(ctx context.Context, args []string, stdout io.Writer) error {

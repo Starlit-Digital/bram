@@ -21,6 +21,7 @@ import (
 )
 
 type Server struct {
+	slots  chan struct{}
 	cfg    config.Config
 	server *http.Server
 }
@@ -41,7 +42,7 @@ type AskResponse struct {
 
 func New(cfg config.Config) *Server {
 	mux := http.NewServeMux()
-	s := &Server{cfg: cfg}
+	s := &Server{cfg: cfg, slots: make(chan struct{}, 4)}
 	mux.HandleFunc("/v1/health", negotiate(s.health))
 	mux.HandleFunc("/v1/peers", negotiate(s.peers))
 	mux.HandleFunc("/v1/ask", negotiate(s.ask))
@@ -145,6 +146,13 @@ func (s *Server) ask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	select {
+	case s.slots <- struct{}{}:
+		defer func() { <-s.slots }()
+	default:
+		writeError(w, r, http.StatusTooManyRequests, "peer capacity reached (four active requests)")
+		return
+	}
 	result, err := peer.Ask(r.Context(), spec, req.Prompt)
 	resp := AskResponse{
 		Peer:       name,

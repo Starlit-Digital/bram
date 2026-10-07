@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 — 2026-10-07
+
+- Add optional tool inventory, plans and local repository/UI/log workflows with private, bounded JSON artifacts.
+- Add explicit report feedback through a selected peer and `ask --input FILE|-`.
+- Bound subprocess stdout/stderr and admit at most four concurrent peer requests.
+- Keep standalone commands usable without companion tools.
+
+## Prior documentation cleanup
 
 - Report the shared application version in capabilities instead of a stale literal.
 - Align README source version and canonical repository links with 0.3.1.

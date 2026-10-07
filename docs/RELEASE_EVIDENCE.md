@@ -57,3 +57,25 @@ tracked documentation already matched. This changes presentation only; existing
 release versions, behavior, feature/license promises and platform evidence remain
 applicable. clyde's manual generation/check, GitHub policy check and SVG XML
 validation passed. No new runtime release or installer change is claimed.
+
+## 0.4.0 optional integration source verification — 2026-10-07
+
+All six participating CLIs passed their Go suites and vet checks on macOS arm64.
+bram's race checks passed for app, daemon, peer and toolbridge. Native make build
+installed the selected sources. Identity, missing-companion doctor and original
+native discovery commands passed from outside the source checkouts.
+
+Native repository/UI/local-log recipes passed against synthetic fixtures, with
+optional private Vigil health preview leaving the inspected repository unchanged.
+Reports preserved private permissions, exact stdout hashes and anonymized log IPs.
+Failed fixture reports were retained and other steps continued. An isolated daemon
+with /bin/cat passed stdin input and explicit report feedback; no real AI provider,
+SSH or upload operation was used. Existing daemons/configuration were not changed.
+The selected private Vigil needed a local wrapper persistence fix for health
+previews; that private source is not part of these public snapshots.
+
+Evidence is retained locally under
+/private/var/www/starlit-digital/archives/starlit-cli-integration-20261007.
+These checks do not establish tagged-release, native Linux/Windows, complete
+process isolation or real-provider compatibility. Peer bounds/concurrency limits
+apply to newly started updated daemons; installing does not restart existing ones.

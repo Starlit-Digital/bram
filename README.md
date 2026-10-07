@@ -9,7 +9,7 @@ which commands it can run. It does not include an AI model or provider account.
 [Product page](https://sltd.ca/bram/) · [Source](https://github.com/Starlit-Digital/bram) ·
 [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
-**Source version 0.3.1 · 0BSD · early development · macOS verified.**
+**Source version 0.4.0 · 0BSD · early development · macOS verified.**
 The Go router can be built elsewhere, but launchd is macOS-only and the full
 installer/mailbox workflow has not been qualified on Linux or Windows.
 
@@ -52,7 +52,7 @@ Use a different PREFIX if you already have another Grok CLI. Add your chosen
 prefix's `bin` directory to PATH. The receipt records source, commit, dirty
 state, version and executable digests. No repository symlink is installed.
 
-For the current 0.3.1 source, clone the canonical repository and use `make build`.
+For the current 0.4.0 source, clone the canonical repository and use `make build`.
 The latest published tag is `v0.2.0`; to install only that tagged Go CLI:
 
 ```sh
@@ -61,7 +61,7 @@ go install github.com/cshaiku/bram/cmd/bram@v0.2.0
 
 The Go module path remains `github.com/cshaiku/bram` for compatibility. This
 older tagged installation does not include the mailbox wrapper, an installation
-receipt, or the changes in 0.3.0 and 0.3.1. Those source versions are not tagged.
+receipt, or the changes in 0.3.0, 0.3.1 and 0.4.0. Those source versions are not tagged.
 
 ## Configure peers
 
@@ -91,9 +91,9 @@ A minimal configuration is:
 
 Run `bram daemon --config /path/to/config.json` for a separate configuration.
 Peer names, commands and timeouts are validated when the daemon loads the file.
-Use trusted commands and keep the listener on loopback. Structured input and output are capped at 64 MiB. The API has no authentication
-or concurrency controls, and peer output is still buffered without a subprocess
-output limit; see SECURITY.md.
+Use trusted commands and keep the listener on loopback. Structured input and output are capped at 64 MiB. The API has no authentication. At most four peer requests execute concurrently;
+additional asks return HTTP 429. Peer stdout is capped at 2 MiB and stderr at
+64 KiB; overflow cancels the peer. See SECURITY.md.
 
 ## HTTP API
 
@@ -141,8 +141,7 @@ structured failures. Existing JSON requests/responses remain supported.
 Configuration also accepts GCF: use `bram daemon --config config.gcf` explicitly.
 Default config lookup still uses config.json. Only complete generic snapshots are
 accepted; graph/session-delta profiles and invalid UTF-8/trailing data are rejected.
-Input, decoded data and encoded output are limited to 64 MiB. The peer process can
-still allocate more output before response admission. GCF does not normalize the
+Input, decoded data and encoded output are limited to 64 MiB. Peer stdout/stderr capture is bounded separately from wire encoding. GCF does not normalize the
 meaning of a provider's text or change command permissions.
 
 ## Grok mailbox helper
@@ -209,3 +208,7 @@ invalidate them. Local setup is described in [operations](docs/OPERATIONS.md).
 bram uses the [BSD Zero Clause license (0BSD)](LICENSE), the same license as
 Starlit Digital's loom. You may use, copy, modify and distribute it, including
 commercially. See the license for its terms and warranty disclaimer.
+
+## Optional companion tools
+
+`bram tools doctor` checks installations; `tools plan` previews workflows and `tools run` collects local reports in a new private directory. Normal commands continue to work without other Starlit tools. AI feedback requires a separate explicit report/peer invocation. See [CLI integration](docs/TOOL_INTEGRATION.md) for recipes, limits and snapshot ownership.
