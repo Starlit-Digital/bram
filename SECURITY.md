@@ -1,6 +1,6 @@
 # Security
 
-bram 0.4.x is early-development software for trusted local workflows.
+bram 0.5.x is early-development software for trusted local workflows.
 Report security issues privately to security@sltd.ca; include the version,
 reproduction steps and impact. Do not publish secrets or live prompts in an issue.
 No response-time or patch-support commitment is currently offered.

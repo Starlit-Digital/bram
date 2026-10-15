@@ -26,14 +26,14 @@ elif dest.exists() and any(dest.iterdir()):
     parser.error('nonempty destination has no snapshot receipt; preserve it before syncing')
 dest.mkdir(parents=True, exist_ok=True)
 files = {}
-for name in ['bridge.go', 'bridge_test.go', 'LICENSE']:
+for name in sorted(p.name for p in source.iterdir() if p.suffix == '.go' or p.name == 'LICENSE' or p.name.startswith('graph_contract_') and p.suffix == '.json'):
     data = (source / name).read_bytes()
     (dest / name).write_bytes(data)
     files[name] = hashlib.sha256(data).hexdigest()
 (dest / 'UPSTREAM.json').write_text(json.dumps({
     'schemaVersion': 1,
     'source': 'Starlit-Digital/bram/internal/toolbridge',
-    'version': '1.0.0',
+    'version': '1.2.0',
     'license': '0BSD',
     'files': files,
 }, indent=2) + '\n')

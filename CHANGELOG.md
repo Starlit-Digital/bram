@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 — 2026-10-15
+
+- Track declared tool configuration, runtimes, SDK identity files and environment in graph fingerprints.
+- Add shell completion hooks and shared protocol/native recovery checks on macOS, Windows and Linux.
+
+- Shared graph protocol 1.1.0: schemas, native report imports, bounded context, exact argv execution, durable checkpoints and selective evidence reuse.
+- Add bounded replay-safe retries and explicit failure-only AI diagnosis; AI cannot qualify checks or apply repairs.
+- Preserve standalone tools and native upload/mutation boundaries; bridge snapshots advance to 1.2.0.
+
 ## 0.4.0 — 2026-10-07
 
 - Add optional tool inventory, plans and local repository/UI/log workflows with private, bounded JSON artifacts.

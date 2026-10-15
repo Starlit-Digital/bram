@@ -9,7 +9,7 @@ which commands it can run. It does not include an AI model or provider account.
 [Product page](https://sltd.ca/bram/) · [Source](https://github.com/Starlit-Digital/bram) ·
 [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
-**Source version 0.4.0 · 0BSD · early development · macOS verified.**
+**Source version 0.5.0 · 0BSD · early development · macOS verified.**
 The Go router can be built elsewhere, but launchd is macOS-only and the full
 installer/mailbox workflow has not been qualified on Linux or Windows.
 
@@ -52,16 +52,15 @@ Use a different PREFIX if you already have another Grok CLI. Add your chosen
 prefix's `bin` directory to PATH. The receipt records source, commit, dirty
 state, version and executable digests. No repository symlink is installed.
 
-For the current 0.4.0 source, clone the canonical repository and use `make build`.
-The latest published tag is `v0.2.0`; to install only that tagged Go CLI:
+For the current 0.5.0 source, clone the canonical repository and use `make build`.
+To install the versioned Go CLI without the native installation payload:
 
 ```sh
-go install github.com/cshaiku/bram/cmd/bram@v0.2.0
+go install github.com/cshaiku/bram/cmd/bram@v0.5.0
 ```
 
-The Go module path remains `github.com/cshaiku/bram` for compatibility. This
-older tagged installation does not include the mailbox wrapper, an installation
-receipt, or the changes in 0.3.0, 0.3.1 and 0.4.0. Those source versions are not tagged.
+The Go module path remains `github.com/cshaiku/bram` for compatibility. A Go-only installation does not include the mailbox wrapper or native installation
+receipt; use `make build` for the complete local payload.
 
 ## Configure peers
 
@@ -212,3 +211,10 @@ commercially. See the license for its terms and warranty disclaimer.
 ## Optional companion tools
 
 `bram tools doctor` checks installations; `tools plan` previews workflows and `tools run` collects local reports in a new private directory. Normal commands continue to work without other Starlit tools. AI feedback requires a separate explicit report/peer invocation. See [CLI integration](docs/TOOL_INTEGRATION.md) for recipes, limits and snapshot ownership.
+
+## Shared graph workflows
+
+`bram tools graph help` exposes versioned workflow plans, stage-specific context,
+checkpointed execution, selective resume and evidence verification across the
+local CLI suite. AI diagnosis remains explicit and advisory.
+[Contracts and usage](docs/GRAPH_WORKFLOWS.md).
