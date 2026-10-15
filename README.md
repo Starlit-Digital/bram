@@ -9,7 +9,7 @@ which commands it can run. It does not include an AI model or provider account.
 [Product page](https://sltd.ca/bram/) · [Source](https://github.com/Starlit-Digital/bram) ·
 [Changelog](CHANGELOG.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
-**Source version 0.5.0 · 0BSD · early development · macOS verified.**
+**Source version 0.5.1 · 0BSD · early development · macOS verified.**
 The Go router can be built elsewhere, but launchd is macOS-only and the full
 installer/mailbox workflow has not been qualified on Linux or Windows.
 
@@ -52,11 +52,11 @@ Use a different PREFIX if you already have another Grok CLI. Add your chosen
 prefix's `bin` directory to PATH. The receipt records source, commit, dirty
 state, version and executable digests. No repository symlink is installed.
 
-For the current 0.5.0 source, clone the canonical repository and use `make build`.
+For the current 0.5.1 source, clone the canonical repository and use `make build`.
 To install the versioned Go CLI without the native installation payload:
 
 ```sh
-go install github.com/cshaiku/bram/cmd/bram@v0.5.0
+go install github.com/cshaiku/bram/cmd/bram@v0.5.1
 ```
 
 The Go module path remains `github.com/cshaiku/bram` for compatibility. A Go-only installation does not include the mailbox wrapper or native installation

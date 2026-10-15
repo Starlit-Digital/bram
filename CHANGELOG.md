@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1 — 2026-10-15
+
+- Build with Go 1.26.9 to satisfy the release standard-library vulnerability gate.
+- Preserve graph protocol 1.1.0 and bridge 1.2.0 compatibility.
+
 ## 0.5.0 — 2026-10-15
 
 - Track declared tool configuration, runtimes, SDK identity files and environment in graph fingerprints.
