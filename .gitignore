@@ -4,3 +4,8 @@
 build/release-evidence/
 
 .DS_Store
+
+# Generated native graph qualification binaries and Python bytecode
+/build/graph-native-*/
+__pycache__/
+*.pyc
