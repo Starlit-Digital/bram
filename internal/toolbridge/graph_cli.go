@@ -63,7 +63,7 @@ func GraphCommand(args []string, caller, version string, out, errout io.Writer) 
 	kind := fs.String("kind", "workflow", "schema kind")
 	loom := fs.String("loom", "", "Loom graph JSON")
 	clyde := fs.String("clyde-manifest", "", "Clyde manifest JSON")
-	impact := fs.String("impact", "", "Vigil impact JSON")
+	impact := fs.String("impact", "", "vigil impact JSON")
 	if e := fs.Parse(args[1:]); e != nil {
 		return graphCLIError(errout, "invalid_arguments", e, 2)
 	}

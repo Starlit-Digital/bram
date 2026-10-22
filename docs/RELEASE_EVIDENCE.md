@@ -66,12 +66,12 @@ installed the selected sources. Identity, missing-companion doctor and original
 native discovery commands passed from outside the source checkouts.
 
 Native repository/UI/local-log recipes passed against synthetic fixtures, with
-optional private Vigil health preview leaving the inspected repository unchanged.
+optional private vigil health preview leaving the inspected repository unchanged.
 Reports preserved private permissions, exact stdout hashes and anonymized log IPs.
 Failed fixture reports were retained and other steps continued. An isolated daemon
 with /bin/cat passed stdin input and explicit report feedback; no real AI provider,
 SSH or upload operation was used. Existing daemons/configuration were not changed.
-The selected private Vigil needed a local wrapper persistence fix for health
+The selected private vigil needed a local wrapper persistence fix for health
 previews; that private source is not part of these public snapshots.
 
 Evidence is retained locally under

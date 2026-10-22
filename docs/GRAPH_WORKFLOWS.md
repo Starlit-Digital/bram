@@ -2,7 +2,7 @@
 
 Local implementation, 2026-10-15. Bridge 1.2.0 / graph protocol 1.1.0.
 
-Vigil, Loom, Clyde, Bram, Nora and Goshi expose the same `tools graph` contract.
+vigil, Loom, Clyde, Bram, Nora and Goshi expose the same `tools graph` contract.
 Each keeps its native engine and can be built/used without the other tools.
 Companions are needed only when a workflow names them. This feature is local;
 installing it does not publish a release or start an AI provider.
@@ -121,7 +121,7 @@ Select imports relevant to your repository; none is mandatory.
 - **Clyde:** imports manifest source identities and checks current bytes against
   recorded hashes. This does not replace native bundle/chunk verification, secret
   scanning or upload approval. No source is uploaded by the graph engine.
-- **Vigil:** imports owner/context relationships and check prerequisites. Checks
+- **vigil:** imports owner/context relationships and check prerequisites. Checks
   with explicit `argv` become executable plan nodes; legacy command-only advice
   stays a warning. Imported checks default to one non-replayable attempt. Review
   their potentially mutating behavior before approving execution. Unmatched paths
@@ -205,7 +205,7 @@ schema identifiers. `explain` additionally supports text and Mermaid. Exit codes
 0 success, 1 failed/stale execution or verification, 2 invalid request/plan, 130
 user interrupt. CLI `--help` and the existing shell command structure still work.
 
-Vigil also advertises read-only `graph:capabilities`, `graph:plan`, `graph:explain`,
+vigil also advertises read-only `graph:capabilities`, `graph:plan`, `graph:explain`,
 `graph:context`, `graph:verify` through its registry/MCP. They suppress automatic
 evidence/timing writes. Execution remains the explicit native `tools graph`
 request; there is no new MCP execution/approval bypass.
@@ -223,7 +223,7 @@ bounds capture, not every descendant process or external effect.
 
 The shared 0BSD implementation/tests live in Bram's `internal/toolbridge`.
 Other CLIs carry digest-checked snapshots; use Bram's `scripts/sync-toolbridge.py`
-for explicit updates. No private Vigil implementation is copied to public tools.
+for explicit updates. No private vigil implementation is copied to public tools.
 
 Regression tests exercise selective reuse, stale/tampered evidence, dependency
 blocking, recovery, budgets, output limits, context stages and explicit mock AI

@@ -358,7 +358,7 @@ func TestGraphImportsRejectStaleClydeAndConnectVigil(t *testing.T) {
 	graphTestJSON(t, impact, map[string]any{"schema_version": 1, "nodes": []any{map[string]any{"id": "check:build", "kind": "check", "argv": []string{p.Tools[0].Path}}, map[string]any{"id": "check:render", "kind": "check", "argv": []string{p.Tools[0].Path}}}, "edges": []any{map[string]any{"from": "check:render", "to": "check:build", "relation": "requires"}}, "unmatched": []string{"unrelated"}})
 	p = graphTestPlan(t, root, path, GraphImport{"vigil", impact})
 	if len(p.Workflow.Nodes) != 2 || p.Order[0] != "impact-build" || len(p.Workflow.Nodes[1].Needs) != 1 {
-		t.Fatal("Vigil dependencies lost")
+		t.Fatal("vigil dependencies lost")
 	}
 }
 

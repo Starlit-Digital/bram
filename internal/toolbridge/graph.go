@@ -614,7 +614,7 @@ func BuildGraphPlan(root, workflow string, imports []GraphImport) (GraphPlan, er
 				Unmatched []string `json:"unmatched"`
 			}
 			if e = json.Unmarshal(b, &doc); e != nil || doc.Version != 1 || len(doc.Files) > 4096 || len(doc.Nodes) > 8192 || len(doc.Edges) > 32768 {
-				return fail(errors.New("invalid Vigil impact report"))
+				return fail(errors.New("invalid vigil impact report"))
 			}
 			for _, f := range doc.Files {
 				if e = addLocal(f.Path, true); e != nil {
@@ -634,7 +634,7 @@ func BuildGraphPlan(root, workflow string, imports []GraphImport) (GraphPlan, er
 			for _, n := range doc.Nodes {
 				if n.Kind == "check" {
 					if len(n.Argv) == 0 {
-						p.Warnings = append(p.Warnings, "Unexecutable Vigil recommendation (no argv): "+n.ID)
+						p.Warnings = append(p.Warnings, "Unexecutable vigil recommendation (no argv): "+n.ID)
 						continue
 					}
 					id := "impact-" + strings.TrimPrefix(n.ID, "check:")
@@ -661,7 +661,7 @@ func BuildGraphPlan(root, workflow string, imports []GraphImport) (GraphPlan, er
 				}
 			}
 			if len(doc.Unmatched) > 0 {
-				p.Warnings = append(p.Warnings, fmt.Sprintf("Vigil reports %d unmatched paths; this plan is partial coverage.", len(doc.Unmatched)))
+				p.Warnings = append(p.Warnings, fmt.Sprintf("vigil reports %d unmatched paths; this plan is partial coverage.", len(doc.Unmatched)))
 			}
 		default:
 			return fail(fmt.Errorf("unknown import kind: %s", imp.Kind))

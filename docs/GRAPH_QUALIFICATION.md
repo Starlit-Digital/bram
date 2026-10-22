@@ -1,7 +1,7 @@
 # Graph runtime qualification — 2026-10-15
 
 Bridge 1.2.0 / graph protocol 1.1.0. Shared package authored in public Bram and
-mirrored with SHA-256 receipts. No private Vigil source is included in public
+mirrored with SHA-256 receipts. No private vigil source is included in public
 snapshots. The public releases retain each tool's native authority boundaries.
 
 Local macOS checks: all six Go suites and vet; shared-package race detection;

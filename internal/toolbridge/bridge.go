@@ -113,7 +113,7 @@ func command(args []string, caller, callerVersion string, out io.Writer) error {
 	peer := fs.String("peer", "", "explicit bram peer for feedback")
 	log := fs.String("log", "", "local access log")
 	dest := fs.String("output-dir", "", "new private run directory")
-	withVigil := fs.Bool("with-vigil", false, "include Vigil repository health")
+	withVigil := fs.Bool("with-vigil", false, "include vigil repository health")
 	if err := fs.Parse(args[2:]); err != nil {
 		return err
 	}
