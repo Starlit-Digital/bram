@@ -21,13 +21,13 @@ func TestGraphToolInputsInvalidateOnlyTheirConsumers(t *testing.T) {
 	}
 	graphTestWrite(t, filepath.Join(root, "config.json"), []byte(`{"value":1}`))
 	external := filepath.Join(t.TempDir(), "new-dir", "optional.json")
-	w := GraphWorkflow{Schema: "starlit.workflow.v1", Name: "tool-freshness", ToolInputs: []GraphToolInputs{{Name: toolA, Files: []string{"config.json"}, OptionalFiles: []string{external}, Runtimes: []string{runtime}, Environment: []string{"STARLIT_TOOL_TEST"}}}, Nodes: []GraphStep{
+	w := GraphWorkflow{Schema: "starlit.workflow.v1", Name: "tool-freshness", ToolInputs: []GraphToolInputs{{Name: toolA, Files: []string{"config.json"}, OptionalFiles: []string{external}, Runtimes: []string{runtime}, Environment: []string{"STARLIGHT_TOOL_TEST"}}}, Nodes: []GraphStep{
 		{ID: "a", Kind: "check", Argv: []string{toolA}, TimeoutSeconds: 10, MaxAttempts: 1, ReplaySafe: true},
 		{ID: "b", Kind: "check", Argv: []string{toolB}, TimeoutSeconds: 10, MaxAttempts: 1, ReplaySafe: true},
 		{ID: "downstream", Kind: "check", Argv: []string{toolB}, Needs: []string{"a"}, TimeoutSeconds: 10, MaxAttempts: 1, ReplaySafe: true}}}
 	path := filepath.Join(root, "workflow.json")
 	graphTestJSON(t, path, w)
-	t.Setenv("STARLIT_TOOL_TEST", "secret-one")
+	t.Setenv("STARLIGHT_TOOL_TEST", "secret-one")
 	p := graphTestPlan(t, root, path)
 	changed := func(label string) {
 		t.Helper()
@@ -41,7 +41,7 @@ func TestGraphToolInputsInvalidateOnlyTheirConsumers(t *testing.T) {
 	changed("configuration")
 	graphTestWrite(t, runtime, []byte("interpreter changed"))
 	changed("runtime binary")
-	t.Setenv("STARLIT_TOOL_TEST", "secret-two")
+	t.Setenv("STARLIGHT_TOOL_TEST", "secret-two")
 	changed("tool environment")
 	os.MkdirAll(filepath.Dir(external), 0700)
 	graphTestWrite(t, external, []byte("new optional configuration"))

@@ -225,9 +225,9 @@ func TestGraphCycleUnknownAndBounds(t *testing.T) {
 }
 func TestGraphContextStagesAndEnvironmentFreshness(t *testing.T) {
 	root, path, w := graphTestFixture(t)
-	w.Environment = []string{"STARLIT_GRAPH_TEST"}
+	w.Environment = []string{"STARLIGHT_GRAPH_TEST"}
 	graphTestJSON(t, path, w)
-	t.Setenv("STARLIT_GRAPH_TEST", "secret-one")
+	t.Setenv("STARLIGHT_GRAPH_TEST", "secret-one")
 	p := graphTestPlan(t, root, path)
 	packet, e := GraphContextPacket(p, "investigate")
 	if e != nil {
@@ -245,7 +245,7 @@ func TestGraphContextStagesAndEnvironmentFreshness(t *testing.T) {
 	if bytes.Contains(b, []byte(`"text":"owner guidance"`)) {
 		t.Fatal("stage was ignored")
 	}
-	t.Setenv("STARLIT_GRAPH_TEST", "secret-two")
+	t.Setenv("STARLIGHT_GRAPH_TEST", "secret-two")
 	if _, e = GraphContextPacket(p, "investigate"); e == nil {
 		t.Fatal("environment change did not invalidate context")
 	}

@@ -47,10 +47,10 @@
 
 ## 0.2.0 — 2026-10-06
 
-First public Starlit Digital release, licensed under 0BSD to match loom.
+First public Starlight Digital release, licensed under 0BSD to match loom.
 
 - Publish the source as github.com/cshaiku/bram and use its canonical Go module path.
-- Identify Starlit Digital as maintainer; add license, contribution and security docs.
+- Identify Starlight Digital as maintainer; add license, contribution and security docs.
 - Add VERSION and RELEASE_DATE; include owner/version in installation receipts.
 - Move the studio checkout under starlit-digital and update development collection.
 - Default new mailbox helpers to the user's home directory. Explicit paths and

@@ -1,6 +1,6 @@
 # bram
 
-A small local router for command-line AI tools, maintained by [Starlit Digital](https://sltd.ca/).
+A small local router for command-line AI tools, maintained by [Starlight Digital](https://sltd.ca/).
 
 bram runs an HTTP daemon, sends a prompt to a configured command over stdin,
 and returns its output, errors, exit code and elapsed time as JSON or GCF. You choose
@@ -175,7 +175,7 @@ The agent uses `$HOME/.local/bin/bram`; a custom PREFIX requires your own servic
 configuration. Logs live under `$HOME/.local/share/bram/logs`.
 `ca.starlitdigital.bram` is the current service label. Install unloads the legacy
 label and removes its plist after successful replacement, so a second daemon is
-not created. Starlit Digital maintains bram.
+not created. Starlight Digital maintains bram.
 
 When generating the agent, an explicit BRAM_GROK_MAILBOX wins. Existing
 `/private/ai-notes/bram` directories retain the old mailbox path; new installations
@@ -205,7 +205,7 @@ invalidate them. Local setup is described in [operations](docs/OPERATIONS.md).
 ## License
 
 bram uses the [BSD Zero Clause license (0BSD)](LICENSE), the same license as
-Starlit Digital's loom. You may use, copy, modify and distribute it, including
+Starlight Digital's loom. You may use, copy, modify and distribute it, including
 commercially. See the license for its terms and warranty disclaimer.
 
 ## Optional companion tools

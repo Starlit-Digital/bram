@@ -1,6 +1,6 @@
 # bram repository instructions
 
-bram is maintained by Starlit Digital under 0BSD. Read CHANGELOG.md and
+bram is maintained by Starlight Digital under 0BSD. Read CHANGELOG.md and
 SECURITY.md with README.md. VERSION and internal/appinfo must agree.
 The canonical studio checkout is /private/var/www/starlit-digital/bram.
 
